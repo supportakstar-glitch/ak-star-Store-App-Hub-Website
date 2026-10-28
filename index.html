@@ -45,9 +45,9 @@
         body.theme-emerald {
             --bg-dark: #040d0a;
             --card-bg: rgba(10, 29, 21, 0.82);
-            --border-color: rgba(16, 185, 129, 0.16);
+            --border-color: rgba(168, 85, 247, 0.16);
             --accent: #10b981;
-            --accent-glow: rgba(16, 185, 129, 0.4);
+            --accent-glow: rgba(168, 85, 247, 0.4);
             --btn-grad-start: #059669;
             --btn-grad-end: #34d399;
         }
@@ -540,6 +540,69 @@
             color: #818cf8 !important;
         }
 
+        /* ACCESS KEY SYSTEM STYLES (NEW) */
+        .app-key-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px dashed rgba(99, 102, 241, 0.4);
+            border-radius: 12px;
+            padding: 8px 12px;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .key-text-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .key-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .key-label {
+            font-size: 0.72rem;
+            color: #c7d2fe;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .key-value {
+            font-size: 0.82rem;
+            font-family: monospace;
+            font-weight: 700;
+            color: #38bdf8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .btn-copy-key {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--accent);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        .btn-copy-key:hover {
+            background: var(--accent);
+        }
+
         /* PLAY STORE CAROUSEL & SECTIONS */
         .store-sections-wrapper {
             display: flex;
@@ -982,7 +1045,7 @@
         .details-actions-bar { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; }
 
         .reviews-section { margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px; width: 100%; }
-        .reviews-section h3 { font-size: 1.05rem; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: gap; gap: 6px; }
+        .reviews-section h3 { font-size: 1.05rem; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
 
         .write-review-box { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; margin-bottom: 18px; width: 100%; }
         .star-rating-select { display: flex; gap: 6px; margin: 8px 0 12px; cursor: pointer; }
@@ -1332,7 +1395,7 @@
                     <input type="text" placeholder="Search apps, tools, games..." id="searchInput" autocomplete="off">
                     <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()" title="Clear">✕</button>
                 </div>
-                <!-- Real Suggestions List (Only Real Database Apps) -->
+                <!-- Real Suggestions List -->
                 <div class="search-suggestions-panel" id="searchSuggestionsPanel"></div>
             </div>
             
@@ -1423,6 +1486,9 @@
                     <span class="badge-col-label">Verified APK</span>
                 </div>
             </div>
+
+            <!-- Modal Dynamic Access Key Display Box -->
+            <div id="modalKeyBoxWrapper" style="margin-bottom: 20px;"></div>
 
             <div class="details-actions-bar" id="modalActionsBar">
                 <button class="btn-share" id="modalShareBtn" onclick="shareCurrentModalApp()" title="Share App Link">
@@ -1672,6 +1738,21 @@
                             </div>
                         </div>
 
+                        <!-- ACCESS KEY SYSTEM CONTROLS (NEW) -->
+                        <div class="form-row" style="background: rgba(99, 102, 241, 0.05); padding: 10px; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2); margin-bottom: 14px;">
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label style="color: #c7d2fe;">🔑 App Key System (Enable/Disable)</label>
+                                <select id="appKeyStatusInput" onchange="toggleKeyInputField(this.value)">
+                                    <option value="disabled">Key System OFF (No Key Required)</option>
+                                    <option value="enabled">Key System ON (Require Access Key)</option>
+                                </select>
+                            </div>
+                            <div class="input-group" id="appKeyFieldWrap" style="display: none; margin-bottom: 0;">
+                                <label style="color: #38bdf8;">🔑 Secret Access Key (User copy karega)</label>
+                                <input type="text" id="appKeyInput" placeholder="e.g. AK-VIP-99482 or Free Access Code">
+                            </div>
+                        </div>
+
                         <div class="form-row">
                             <div class="input-group">
                                 <label>Updated Date (Release Date)</label>
@@ -1725,13 +1806,13 @@
             console.error("Firebase Init Error:", e);
         }
 
-        // PURGE OLD DUMMY DATA CACHE TO AVOID DUPLICATES
+        // PURGE OLD DUMMY DATA CACHE
         localStorage.removeItem("ak_star_apps");
         localStorage.removeItem("ak_star_categories");
         localStorage.removeItem("ak_star_apps_cache");
         localStorage.removeItem("ak_star_cats_cache");
 
-        // 100% PURE REAL DATA ARRAYS ONLY (NO INITIAL/DUMMY APPS)
+        // REAL DATA ARRAYS ONLY
         let liveApps = [];
         let liveCategories = [];
         let currentCategory = "All";
@@ -1798,6 +1879,25 @@
 
             return linked.replace(/\n/g, "<br>");
         }
+
+        // Toggle Key Input in Admin Form
+        window.toggleKeyInputField = function(val) {
+            const wrap = document.getElementById("appKeyFieldWrap");
+            if (wrap) {
+                wrap.style.display = (val === "enabled") ? "block" : "none";
+            }
+        };
+
+        // Copy Key to Clipboard Helper
+        window.copyAppAccessKey = function(keyVal, event) {
+            if (event) event.stopPropagation();
+            if (!keyVal) return;
+            navigator.clipboard.writeText(keyVal).then(() => {
+                showToast(`🔑 Access Key Copied: ${keyVal}`);
+            }).catch(() => {
+                prompt("Copy Key:", keyVal);
+            });
+        };
 
         const logoDefinitions = {
             "type-default": `<button class="btn-admin-access type-default"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span>Admin Portal</span></button>`,
@@ -2201,10 +2301,9 @@
             initAnimationEffect(currentStoreAnimation);
         }
 
-        // STRICT REALTIME FIRESTORE LISTENERS (ZERO DUMMY / ZERO LOCAL MERGE)
+        // STRICT REALTIME FIRESTORE LISTENERS
         function initRealtimeListeners() {
             if (db) {
-                // 1. Appearance Listeners
                 db.collection("store_meta").doc("appearance").onSnapshot((doc) => {
                     if (doc.exists) {
                         const data = doc.data();
@@ -2236,7 +2335,6 @@
                     }
                 }, (err) => console.error(err));
 
-                // 2. Custom Logo Branding Listener
                 db.collection("store_meta").doc("branding").onSnapshot((doc) => {
                     if (doc.exists && doc.data().siteLogoUrl) {
                         currentSiteLogoUrl = doc.data().siteLogoUrl;
@@ -2248,7 +2346,6 @@
                     }
                 }, (err) => console.error(err));
 
-                // 3. Channels Listener
                 db.collection("store_meta").doc("channels").onSnapshot((doc) => {
                     if (doc.exists) {
                         const data = doc.data();
@@ -2265,7 +2362,6 @@
                     }
                 }, (err) => console.error(err));
 
-                // 4. Categories Listener (DIRECT FROM FIRESTORE ONLY)
                 db.collection("store_meta").doc("categories").onSnapshot((doc) => {
                     if (doc.exists && doc.data().list) {
                         liveCategories = doc.data().list;
@@ -2276,7 +2372,6 @@
                     renderStoreApps();
                 }, (err) => console.error(err));
 
-                // 5. Apps Listener (PURE DATABASE COLLECTION - ZERO DUPLICATES)
                 db.collection("apps").onSnapshot((snapshot) => {
                     liveApps = [];
                     snapshot.forEach((doc) => {
@@ -2380,6 +2475,19 @@
                 </div>
             `;
 
+            // Access Key Card HTML (Only if status is enabled)
+            const isKeyEnabled = app.keyStatus === "enabled" && app.appKey && app.appKey.trim().length > 0;
+            const keyHtml = isKeyEnabled ? `
+                <div class="app-key-container" onclick="event.stopPropagation()">
+                    <div class="key-text-wrap">
+                        <span class="key-icon">🔑</span>
+                        <span class="key-label">Key:</span>
+                        <span class="key-value">${app.appKey}</span>
+                    </div>
+                    <button class="btn-copy-key" onclick="copyAppAccessKey('${app.appKey.replace(/'/g, "\\'")}', event)">Copy</button>
+                </div>
+            ` : '';
+
             const card = document.createElement("article");
             card.className = "app-card";
             card.setAttribute("onclick", `openAppDetails('${app.id}')`);
@@ -2406,6 +2514,7 @@
                     <span class="tag">${reviewCount} Reviews</span>
                     <span class="date-meta-chip">${miniCalBadge} ${updateDate}</span>
                 </div>
+                ${keyHtml}
                 <p class="app-desc">${app.description}</p>
                 <div class="card-actions" onclick="event.stopPropagation()">
                     ${actionButtonHtml}
@@ -2630,6 +2739,25 @@
             document.getElementById("modalSizeVal").innerText = app.size;
             document.getElementById("modalVersionVal").innerText = `v${app.version}`;
             
+            // Modal Key System Render
+            const modalKeyBoxWrapper = document.getElementById("modalKeyBoxWrapper");
+            if (modalKeyBoxWrapper) {
+                if (app.keyStatus === "enabled" && app.appKey && app.appKey.trim().length > 0) {
+                    modalKeyBoxWrapper.innerHTML = `
+                        <div class="app-key-container" style="padding: 12px 16px;">
+                            <div class="key-text-wrap">
+                                <span class="key-icon" style="font-size: 1.2rem;">🔑</span>
+                                <span class="key-label" style="font-size: 0.82rem;">Official Key:</span>
+                                <span class="key-value" style="font-size: 0.95rem; padding: 4px 8px;">${app.appKey}</span>
+                            </div>
+                            <button class="btn-copy-key" style="padding: 8px 14px; font-size: 0.8rem;" onclick="copyAppAccessKey('${app.appKey.replace(/'/g, "\\'")}', event)">Copy Key</button>
+                        </div>
+                    `;
+                } else {
+                    modalKeyBoxWrapper.innerHTML = "";
+                }
+            }
+
             document.getElementById("modalAppDesc").innerHTML = convertTextToClickableHtml(app.description);
             document.getElementById("modalRatingOverview").innerText = `★ ${avgRating} / 5 (${reviewCount} total ratings)`;
 
@@ -2796,11 +2924,12 @@
                 item.className = "admin-item-card";
                 const isComingSoon = !app.downloadUrl || !app.downloadUrl.trim();
                 const statusLabel = isComingSoon ? '<span style="color:#f59e0b;font-weight:700;">[Coming Soon]</span>' : '';
+                const keyBadge = (app.keyStatus === "enabled" && app.appKey) ? '<span style="color:#38bdf8;font-weight:700;">[🔑 Key ON]</span>' : '';
                 item.innerHTML = `
                     <div class="admin-item-info">
                         <span class="admin-item-icon">${formatIconHTML(app.icon)}</span>
                         <div class="admin-item-details">
-                            <h4>${app.name} ${statusLabel}</h4>
+                            <h4>${app.name} ${statusLabel} ${keyBadge}</h4>
                             <span>${app.version} • ${app.size} • ${app.category} • DL: ${app.downloads || 0} • 📅 ${app.updatedDate || 'N/A'}</span>
                         </div>
                     </div>
@@ -2829,6 +2958,12 @@
             document.getElementById("appDownloadsCountInput").value = app.downloads || 0;
             document.getElementById("appDescInput").value = app.description || "";
 
+            // Access Key System Values
+            const keyStatus = app.keyStatus || "disabled";
+            document.getElementById("appKeyStatusInput").value = keyStatus;
+            document.getElementById("appKeyInput").value = app.appKey || "";
+            toggleKeyInputField(keyStatus);
+
             document.getElementById("formSectionTitle").innerText = `Update App: ${app.name}`;
             document.getElementById("submitAppBtn").innerText = "Update App Details";
             document.getElementById("cancelEditBtn").style.display = "block";
@@ -2839,6 +2974,8 @@
         window.cancelEditing = function() {
             document.getElementById("editingAppId").value = "";
             document.getElementById("addAppForm").reset();
+            document.getElementById("appKeyStatusInput").value = "disabled";
+            toggleKeyInputField("disabled");
             document.getElementById("formSectionTitle").innerText = "Add / Upload App Details";
             document.getElementById("submitAppBtn").innerText = "Add App To Store";
             document.getElementById("cancelEditBtn").style.display = "none";
@@ -2871,6 +3008,10 @@
             const downloadsCount = Number(document.getElementById("appDownloadsCountInput").value) || 0;
             const desc = document.getElementById("appDescInput").value.trim();
 
+            // Key System Data
+            const keyStatus = document.getElementById("appKeyStatusInput").value;
+            const appKey = document.getElementById("appKeyInput").value.trim();
+
             if (editingId) {
                 const appData = {
                     name: name,
@@ -2882,7 +3023,9 @@
                     downloadUrl: downloadUrl,
                     updatedDate: updatedDate,
                     downloads: downloadsCount,
-                    description: desc
+                    description: desc,
+                    keyStatus: keyStatus,
+                    appKey: appKey
                 };
 
                 if (db) {
@@ -2904,6 +3047,8 @@
                     updatedDate: updatedDate,
                     downloads: downloadsCount,
                     description: desc,
+                    keyStatus: keyStatus,
+                    appKey: appKey,
                     rating: 5.0,
                     reviews: []
                 };
@@ -2913,6 +3058,7 @@
                 }
 
                 document.getElementById("addAppForm").reset();
+                toggleKeyInputField("disabled");
                 alert("New App published live to AK STAR STORE!");
             }
         };
